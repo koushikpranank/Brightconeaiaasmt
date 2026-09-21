@@ -1,0 +1,55 @@
+erDiagram
+    Supplier ||--o{ PurchaseOrder : supplies
+    DisruptionEventRecord ||--|| DisruptionCase : "one case per event"
+    DisruptionCase ||--o{ Alert : raises
+    DisruptionCase ||--o{ ApprovalRequest : requires
+    DisruptionCase ||--o{ ActionItem : assigns
+    DisruptionCase ||--o{ AgentDecisionLog : "audit trail"
+
+    Supplier {
+        string supplier_code PK
+        string material
+        int lead_time_days
+        int baseline_lead_time_days
+        float price_per_unit
+        float available_quantity
+        float capacity_units_per_month
+        string status
+    }
+    InventoryItem {
+        string material PK
+        float current_quantity
+        float daily_consumption
+        float reorder_point_days
+        datetime snapshot_at
+    }
+    PurchaseOrder {
+        string po_number PK
+        string material
+        date original_delivery_date
+        date revised_delivery_date
+        string status
+    }
+    DisruptionCase {
+        string case_number PK
+        string status
+        json inventory_analysis
+        json impact
+        json mitigation
+        json review
+    }
+    Alert {
+        string dedup_key
+        string status
+        int occurrence_count
+    }
+    ApprovalRequest {
+        string action_type
+        string status
+        string decided_by
+    }
+    AgentDecisionLog {
+        string agent_name
+        string input_summary
+        string output_summary
+    }

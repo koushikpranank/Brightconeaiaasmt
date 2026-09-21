@@ -1,0 +1,25 @@
+databases:
+  - name: supply-chain-db
+    plan: free
+    databaseName: supply_chain
+    user: supply_chain
+
+services:
+  - type: web
+    name: supply-chain-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: supply-chain-db
+          property: connectionString
+      - key: LLM_PROVIDER
+        value: mock
+      - key: EMAIL_MODE
+        value: log
+      - key: MONITOR_INTERVAL_SECONDS
+        value: "300"

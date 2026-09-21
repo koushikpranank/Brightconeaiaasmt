@@ -1,0 +1,10 @@
+flowchart LR
+    A[1. Monitoring] --> B[2. Detection]
+    B -->|confirmed| C[3. Inventory and Demand]
+    B -->|signal cleared| R((resolved))
+    C --> D[4. Impact Assessment]
+    D --> E[5. Mitigation]
+    E --> F[6. Alert and Response]
+    F --> G[7. Reviewer]
+    G -->|approved| P((pending approval))
+    G -->|issues found, under 2 retries| C

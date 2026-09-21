@@ -1,0 +1,24 @@
+flowchart TD
+    subgraph Sources["Data sources"]
+        SUP[Supplier API - simulated]
+        INV[Inventory API - simulated]
+        LOG[Logistics API - simulated]
+        WX[Weather API - real, Open-Meteo]
+    end
+
+    subgraph Backend["FastAPI backend"]
+        SCHED[Scheduler - 60s sweep]
+        GRAPH[7-agent LangGraph pipeline]
+        DB[(SQLite / PostgreSQL)]
+        API[REST API]
+    end
+
+    FE[React + TypeScript frontend]
+    HUMAN[Supply chain manager]
+
+    Sources --> SCHED --> GRAPH
+    GRAPH <--> DB
+    API <--> DB
+    FE <--> API
+    GRAPH -. pending_approval .-> API
+    API -. approve / reject .-> HUMAN --> FE
