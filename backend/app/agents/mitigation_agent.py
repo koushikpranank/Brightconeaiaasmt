@@ -58,23 +58,26 @@ def node(state: CaseState, session: Session) -> dict:
 
     verification_needed = [o["supplier_code"] for o in options if o["data_confidence"] == "requires_verification"]
 
-    recommended_actions = [
-        "Contact the existing supplier to request expedited delivery or a firm revised date in writing.",
-        "Review production priorities for orders consuming this material.",
-    ]
     if options:
         best = options[0]
-        recommended_actions.append(
+        headline_action = (
             f"Evaluate {best['name']} ({best['supplier_code']}) as an alternate source"
             + (" - confirmed available." if best["data_confidence"] == "confirmed" else " - data requires verification before use.")
         )
     else:
-        recommended_actions.append("No approved alternative supplier is on file for this material; escalate for sourcing.")
-    recommended_actions.append("Evaluate additional procurement cost against the mitigation window before committing.")
+        headline_action = "No approved alternative supplier is on file for this material; escalate for sourcing."
+
+    recommended_actions = [
+        headline_action,
+        "Contact the existing supplier to request expedited delivery or a firm revised date in writing.",
+        "Review production priorities for orders consuming this material.",
+        "Evaluate additional procurement cost against the mitigation window before committing.",
+    ]
 
     mitigation = {
         "options": options,
         "recommended_actions": recommended_actions,
+        "headline_action": headline_action,
         "requires_human_approval": True,
         "verification_needed": verification_needed,
         "required_quantity": required_quantity,

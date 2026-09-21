@@ -44,19 +44,18 @@ def test_anthropic_explain_calls_messages_api_with_expected_shape(mock_anthropic
     assert "coverage_days" in kwargs["messages"][0]["content"]
 
 
-@patch("google.generativeai.GenerativeModel")
-@patch("google.generativeai.configure")
-def test_gemini_explain_calls_generate_content_with_expected_shape(mock_configure, mock_model_cls):
-    mock_model = MagicMock()
-    mock_model_cls.return_value = mock_model
-    mock_model.generate_content.return_value = MagicMock(text="Five days of coverage remain.")
+@patch("google.genai.Client")
+def test_gemini_explain_calls_generate_content_with_expected_shape(mock_client_cls):
+    mock_client = MagicMock()
+    mock_client_cls.return_value = mock_client
+    mock_client.models.generate_content.return_value = MagicMock(text="Five days of coverage remain.")
 
     result = _gemini_explain("Summarize coverage.", {"coverage_days": 5.0})
 
     assert result == "Five days of coverage remain."
-    mock_configure.assert_called_once()
-    prompt_arg = mock_model.generate_content.call_args[0][0]
-    assert "coverage_days" in prompt_arg
+    _, kwargs = mock_client.models.generate_content.call_args
+    assert kwargs["model"] == "gemini-flash-latest"
+    assert "coverage_days" in kwargs["contents"]
 
 
 def test_explain_falls_back_to_mock_when_provider_raises(monkeypatch):

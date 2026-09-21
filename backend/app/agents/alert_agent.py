@@ -34,7 +34,7 @@ def node(state: CaseState, session: Session, case_db_id: int) -> dict:
     responsible_team = TEAM_BY_DISRUPTION_TYPE.get(disruption_type, "Supply Chain Management")
 
     expected_impact = impact.get("summary", "Impact assessment pending.")
-    recommended_action = mitigation.get("recommended_actions", ["Review manually."])[0]
+    recommended_action = mitigation.get("headline_action") or mitigation.get("recommended_actions", ["Review manually."])[0]
 
     existing = session.exec(select(Alert).where(Alert.dedup_key == dedup_key)).first()
     if existing:

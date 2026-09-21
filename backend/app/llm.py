@@ -42,12 +42,11 @@ def _anthropic_explain(prompt: str, context: dict) -> str:
 
 
 def _gemini_explain(prompt: str, context: dict) -> str:
-    import google.generativeai as genai
+    from google import genai
 
-    genai.configure(api_key=settings.gemini_api_key)
-    model = genai.GenerativeModel("gemini-1.5-flash")
     full_prompt = f"{prompt}\n\nVerified data (do not alter any numbers):\n{context}"
-    response = model.generate_content(full_prompt)
+    client = genai.Client(api_key=settings.gemini_api_key)
+    response = client.models.generate_content(model="gemini-flash-latest", contents=full_prompt)
     return response.text
 
 

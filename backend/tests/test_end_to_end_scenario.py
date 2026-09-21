@@ -32,6 +32,9 @@ def test_tc01_supplier_delay_produces_alert_and_approval(steel_plate_scenario: S
     assert alert is not None
     assert alert.disruption_type == "supplier_delay"
     assert alert.status == "open"
+    # The alert's headline recommendation must name the specific alternate supplier found,
+    # not the generic "contact the existing supplier" boilerplate that applies to every case.
+    assert "Alpha Metals" in alert.recommended_action
 
     approval = session.exec(select(ApprovalRequest)).first()
     assert approval is not None
