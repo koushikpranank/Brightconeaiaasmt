@@ -7,7 +7,12 @@ using template-based text generation, which keeps the demo runnable out of the b
 Switch to openai/anthropic/gemini via .env once a key is available; the agent code never
 changes because it only calls `explain(...)`.
 """
+import logging
+import time
+
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 
 def _mock_explain(prompt: str, context: dict) -> str:
@@ -60,8 +65,24 @@ _PROVIDERS = {
 
 def explain(prompt: str, context: dict) -> str:
     provider = _PROVIDERS.get(settings.llm_provider, _mock_explain)
-    try:
-        return provider(prompt, context)
-    except Exception:
-        # Never let narration failures break the deterministic pipeline.
+    if provider is _mock_explain:
         return _mock_explain(prompt, context)
+
+    # Real providers get one retry after a short pause - free-tier quotas (e.g. Gemini's
+    # 10 requests/minute) are easy to burst past when several disruption cases are
+    # reprocessed in the same monitoring sweep, and most such 429s clear within a couple
+    # of seconds.
+    for attempt in (1, 2):
+        try:
+            return provider(prompt, context)
+        except Exception as exc:
+            logger.warning(
+                "LLM provider '%s' failed on attempt %d/2 (%s), %s",
+                settings.llm_provider,
+                attempt,
+                exc,
+                "retrying" if attempt == 1 else "falling back to mock narration",
+            )
+            if attempt == 1:
+                time.sleep(2)
+    return _mock_explain(prompt, context)

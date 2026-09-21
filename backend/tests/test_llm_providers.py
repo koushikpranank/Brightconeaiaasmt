@@ -65,6 +65,29 @@ def test_explain_falls_back_to_mock_when_provider_raises(monkeypatch):
 
     monkeypatch.setattr(llm_module, "_PROVIDERS", {"openai": lambda p, c: (_ for _ in ()).throw(RuntimeError("boom"))})
     monkeypatch.setattr(llm_module.settings, "llm_provider", "openai")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda seconds: None)
 
     result = explain("Summarize.", {"material": "Steel Plate"})
     assert "material: Steel Plate" in result
+
+
+def test_explain_retries_once_before_falling_back(monkeypatch):
+    """A transient failure (e.g. a rate limit) on the first attempt should not force a fall
+    back to mock narration if the retry succeeds."""
+    import app.llm as llm_module
+
+    calls = {"count": 0}
+
+    def flaky_provider(prompt, context):
+        calls["count"] += 1
+        if calls["count"] == 1:
+            raise RuntimeError("429 rate limited")
+        return "Five days of coverage remain."
+
+    monkeypatch.setattr(llm_module, "_PROVIDERS", {"openai": flaky_provider})
+    monkeypatch.setattr(llm_module.settings, "llm_provider", "openai")
+    monkeypatch.setattr(llm_module.time, "sleep", lambda seconds: None)
+
+    result = explain("Summarize.", {"material": "Steel Plate"})
+    assert result == "Five days of coverage remain."
+    assert calls["count"] == 2
